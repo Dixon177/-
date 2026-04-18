@@ -4,11 +4,13 @@
 #import <sys/utsname.h>
 #import <dlfcn.h>
 
-// 1. حماية وتزييف الجهاز (Device Spoofer)
+// 1. تزييف الجهاز
 %hook utsname
 int uname(struct utsname *value) {
     int ret = %orig(value);
-    strcpy(value->machine, "iPhone15,2"); 
+    if (value) {
+        strcpy(value->machine, "iPhone15,2"); 
+    }
     return ret;
 }
 %end
@@ -20,7 +22,7 @@ int uname(struct utsname *value) {
 - (NSString *)systemVersion { return @"16.6"; }
 %end
 
-// 2. منع البلاغات والـ Logs (Anti-Report)
+// 2. منع البلاغات
 %hook TDataCollector
 - (void)collectData:(int)dataType { return; }
 %end
@@ -33,23 +35,12 @@ int uname(struct utsname *value) {
 - (void)sendReport:(id)arg1 type:(int)arg2 { return; }
 %end
 
-// 3. تطبيق الأوفستات (Memory Patch)
-void apply_patches() {
-    uintptr_t base = (uintptr_t)_dyld_get_image_header(0);
-    // مثال لأوفست تعطيل الحماية الداخلي
-    uint32_t *patchAddr = (uint32_t *)(base + 0x78A2BC4); 
-    if (patchAddr) *patchAddr = 0xC0035FD6; 
-}
-
+// 3. تشغيل الحماية عند فتح اللعبة
 %ctor {
-    // منع الـ Debugger
     void *handle = dlopen(0, RTLD_GLOBAL | RTLD_NOW);
     typedef int (*ptr_t)(int, pid_t, caddr_t, int);
     ptr_t ptrace_ptr = (ptr_t)dlsym(handle, "ptrace");
     if (ptrace_ptr) ptrace_ptr(31, 0, 0, 0);
 
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        apply_patches();
-        NSLog(@"[Ahmed_Ultra] All Systems Online.");
-    });
+    NSLog(@"[Ahmed_Ultra] Active.");
 }
