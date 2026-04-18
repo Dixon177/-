@@ -1,4 +1,4 @@
-name: Build Ahmed Ultra
+name: Build Ahmed Bypass
 on:
   workflow_dispatch:
 
@@ -9,7 +9,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Dependencies
+      - name: Install Tools
         run: |
           brew install ldid dpkg
           git clone --recursive https://github.com/theos/theos.git ~/theos
@@ -20,8 +20,8 @@ jobs:
         run: |
           make package FINALPACKAGE=1
           
-      - name: Upload Artifact
+      - name: Upload Result
         uses: actions/upload-artifact@v4
         with:
-          name: Ahmed-Ultra-Bypass
+          name: Ahmed-Ultra-File
           path: packages/*.deb
